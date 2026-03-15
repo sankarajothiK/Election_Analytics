@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Analytics Header -->
+<div class="bg-primary text-white py-5 mb-5 shadow w-100 position-relative overflow-hidden" style="background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));">
+    <div class="container text-center position-relative z-index-1">
+        <h1 class="display-5 fw-bold mb-3"><i class="fas fa-chart-line me-3"></i>Deep Analytics Dashboard</h1>
+        <p class="lead mb-0 text-light opacity-75">Transparent, data-driven insights from verified constituent feedback.</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    
+    <!-- Filter Section -->
+    <div class="premium-card mb-5 animate-slide-up">
+        <div class="card-body p-4">
+            <h5 class="card-title mb-4 fw-bold text-primary"><i class="fas fa-filter me-2"></i>Refine Data</h5>
+            <form action="{{ url_for('analytics') }}" method="GET" class="row g-3 align-items-end">
+                <div class="col-lg-2 col-md-4">
+                    <label for="election_type" class="form-label text-uppercase text-secondary" style="font-size: 0.75rem; font-weight: 700;">Election Type</label>
+                    <select class="form-select" id="election_type" name="election_type">
+                        <option value="">All Types</option>
+                        <option value="Parliamentary Election" {% if filters.election_type == 'Parliamentary Election' %}selected{% endif %}>Parliamentary</option>
+                        <option value="State Assembly Election" {% if filters.election_type == 'State Assembly Election' %}selected{% endif %}>State Assembly</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-4">
+                    <label for="state_analytics" class="form-label text-uppercase text-secondary" style="font-size: 0.75rem; font-weight: 700;">State</label>
+                    <select class="form-select" id="state_analytics" name="state" data-value="{{ filters.state or '' }}">
+                        <option value="all">All States</option>
+                        <!-- Injected by main.js -->
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-4">
+                    <label for="constituency_analytics" class="form-label text-uppercase text-secondary" style="font-size: 0.75rem; font-weight: 700;">Constituency</label>
+                    <select class="form-select" id="constituency_analytics" name="constituency" data-value="{{ filters.constituency or '' }}">
+                        <option value="all">All Constituencies</option>
+                        <!-- Injected by main.js based on state -->
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-8">
+                    <label for="issue_analytics" class="form-label text-uppercase text-secondary" style="font-size: 0.75rem; font-weight: 700;">Issue Focus</label>
+                    <select class="form-select" id="issue_analytics" name="issue">
+                        <option value="all">All Issues</option>
+                        <option value="Education" {% if filters.issue == 'Education' %}selected{% endif %}>Education</option>
+                        <option value="Healthcare" {% if filters.issue == 'Healthcare' %}selected{% endif %}>Healthcare</option>
+                        <option value="Employment" {% if filters.issue == 'Employment' %}selected{% endif %}>Employment</option>
+                        <option value="Crime" {% if filters.issue == 'Crime' %}selected{% endif %}>Crime & Safety</option>
+                        <option value="Development" {% if filters.issue == 'Development' %}selected{% endif %}>Local Development</option>
+                        <option value="Infrastructure" {% if filters.issue == 'Infrastructure' %}selected{% endif %}>Infrastructure</option>
+                        <option value="Water" {% if filters.issue == 'Water' %}selected{% endif %}>Water Supply</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold shadow-sm py-2">Apply</button>
+                    <a href="{{ url_for('analytics') }}" class="btn btn-light w-100 fw-medium border py-2">Clear</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Data Visualization Area -->
+    {% if has_data %}
+        <div class="alert alert-primary bg-white border-primary border-start border-5 shadow-sm mb-5 d-flex align-items-center animate-slide-up" style="animation-delay: 0.1s;">
+            <i class="fas fa-info-circle fa-2x text-primary me-3"></i>
+            <div>
+                <h5 class="mb-1 fw-bold">Active Dataset</h5>
+                <p class="mb-0 text-secondary">Showing analytics based on <strong>{{ total_feedback }}</strong> verified voter feedback records.</p>
+            </div>
+        </div>
+
+        <!-- Deep Analytics KPI Row -->
+        <div class="row mb-5 g-4 animate-slide-up" style="animation-delay: 0.2s;">
+            <div class="col-md-4">
+                <div class="premium-card p-4 text-center h-100 d-flex flex-column justify-content-center">
+                    <h6 class="text-secondary text-uppercase mb-2" style="letter-spacing: 0.05em;">Voter Satisfaction Index</h6>
+                    <h2 class="display-4 fw-bold text-gradient mb-0">{{ satisfaction_index }}<span class="fs-4 text-muted">%</span></h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="premium-card p-4 text-center h-100 d-flex flex-column justify-content-center border-bottom border-success border-4">
+                    <h6 class="text-secondary text-uppercase mb-2" style="letter-spacing: 0.05em;">Top Performing Sector</h6>
+                    <h3 class="fw-bold text-success mb-1">{{ best_issue[0] }}</h3>
+                    <p class="text-muted mb-0 fw-medium">Rating: {{ best_issue[1] }} / 5.0</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="premium-card p-4 text-center h-100 d-flex flex-column justify-content-center border-bottom border-danger border-4">
+                    <h6 class="text-secondary text-uppercase mb-2" style="letter-spacing: 0.05em;">Most Critical Issue</h6>
+                    <h3 class="fw-bold text-danger mb-1">{{ critical_issue[0] }}</h3>
+                    <p class="text-muted mb-0 fw-medium">Rating: {{ critical_issue[1] }} / 5.0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5 animate-slide-up" style="animation-delay: 0.3s;">
+            <!-- Doughnut Chart: Leader Support -->
+            <div class="col-lg-5">
+                <div class="premium-card h-100">
+                    <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                        <h5 class="fw-bold text-dark"><i class="fas fa-crown text-primary me-2"></i>Preferred Chief Minister</h5>
+                        <p class="small text-secondary mb-0">Voter alignment and party support.</p>
+                    </div>
+                    <div class="card-body d-flex justify-content-center align-items-center chart-container-premium">
+                        <canvas id="leaderDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Radar Chart: Issue Comparison -->
+            <div class="col-lg-7">
+                <div class="premium-card h-100">
+                    <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                        <h5 class="fw-bold text-dark"><i class="fas fa-bullseye text-primary me-2"></i>Constituency Issue Radar</h5>
+                        <p class="small text-secondary mb-0">Multidimensional view of average ratings.</p>
+                    </div>
+                    <div class="card-body chart-container-premium d-flex justify-content-center">
+                        <canvas id="issueImportanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Spread of sentitment -->
+        <div class="row g-4 mb-5 animate-slide-up" style="animation-delay: 0.4s;">
+            <div class="col-12">
+                <div class="premium-card">
+                    <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                        <h5 class="fw-bold text-dark"><i class="fas fa-chart-area text-primary me-2"></i>Issue-wise Rating Breakdown</h5>
+                        <p class="small text-secondary mb-0">Detailed breakdown of 1 to 5 star ratings across every specific issue.</p>
+                    </div>
+                    <div class="card-body chart-container-premium" style="height: 400px;">
+                        <canvas id="issueWiseRatingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Extra Analytics Row -->
+        <div class="row g-4 mb-5 animate-slide-up" style="animation-delay: 0.5s;">
+            <!-- Supporter Satisfaction Bar Chart -->
+            <div class="col-lg-6">
+                <div class="premium-card h-100">
+                    <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                        <h5 class="fw-bold text-dark"><i class="fas fa-smile-beam text-primary me-2"></i>Supporter Satisfaction Index</h5>
+                        <p class="small text-secondary mb-0">Average overall satisfaction score grouped by Preferred CM.</p>
+                    </div>
+                    <div class="card-body chart-container-premium d-flex justify-content-center align-items-center">
+                        <canvas id="supporterSatisfactionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Top Engaging Constituencies Bar Chart -->
+            <div class="col-lg-6">
+                <div class="premium-card h-100">
+                    <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                        <h5 class="fw-bold text-dark"><i class="fas fa-map-marker-alt text-primary me-2"></i>Top 5 Engaging Constituencies</h5>
+                        <p class="small text-secondary mb-0">Areas with the highest volume of feedback submitted.</p>
+                    </div>
+                    <div class="card-body chart-container-premium d-flex justify-content-center align-items-center">
+                        <canvas id="topConstituenciesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-5 bg-white rounded shadow-sm">
+            <div class="display-1 text-muted mb-4 opacity-50"><i class="fas fa-folder-open"></i></div>
+            <h3 class="fw-bold text-dark">No Feedback Data Found</h3>
+            <p class="text-muted lead">There is no feedback matching your selected filters yet.</p>
+            <p>Wait for users to submit data or adjust your filters.</p>
+            <a href="{{ url_for('feedback') }}" class="btn btn-primary mt-3">Be the first to submit!</a>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if has_data %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const leaderLabels = {{ leader_counts.keys() | list | tojson | safe }};
+        const leaderData = {{ leader_counts.values() | list | tojson | safe }};
+        
+        const issueLabels = {{ issue_averages.keys() | list | tojson | safe }};
+        const issueData = {{ issue_averages.values() | list | tojson | safe }};
+        
+        const issueRatingBreakdown = {{ issue_rating_breakdown | tojson | safe }};
+        const specificIssueLabels = Object.keys(issueRatingBreakdown);
+        
+        // Prepare datasets for grouped bar chart (1 to 5 stars)
+        const starColors = [
+            '#ef4444', // 1 star (Red)
+            '#f59e0b', // 2 star (Orange)
+            '#fbbf24', // 3 star (Yellow)
+            '#34d399', // 4 star (Light Green)
+            '#10b981'  // 5 star (Green)
+        ];
+        
+        const issueWiseDatasets = [1, 2, 3, 4, 5].map(star => {
+            return {
+                label: star + ' Star',
+                backgroundColor: starColors[star - 1],
+                borderRadius: 4,
+                data: specificIssueLabels.map(issue => issueRatingBreakdown[issue][star] || 0)
+            };
+        });
+
+        // Leader Distribution Doughnut Chart
+        const leaderCtx = document.getElementById('leaderDistributionChart').getContext('2d');
+        new Chart(leaderCtx, {
+            type: 'doughnut',
+            data: {
+                labels: leaderLabels,
+                datasets: [{
+                    data: leaderData,
+                    backgroundColor: ['#1e3a8a', '#d97706', '#15803d', '#b45309', '#e11d48', '#0369a1'],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, padding: 20, font: { family: "'Inter', sans-serif" } }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) { label += ': '; }
+                                let val = context.raw;
+                                let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                let percentage = Math.round((val / total) * 100) + '%';
+                                return label + percentage + ' (' + val + ' votes)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Issue Importance Radar Chart
+        const issueCtx = document.getElementById('issueImportanceChart').getContext('2d');
+        new Chart(issueCtx, {
+            type: 'radar',
+            data: {
+                labels: issueLabels,
+                datasets: [{
+                    label: 'Average Rating',
+                    data: issueData,
+                    backgroundColor: 'rgba(30, 58, 138, 0.15)', // Navy low opacity
+                    borderColor: '#1e3a8a',
+                    pointBackgroundColor: '#1e3a8a',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#1e3a8a',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(0,0,0,0.05)' },
+                        grid: { color: 'rgba(0,0,0,0.05)' },
+                        pointLabels: { font: { family: "'Inter', sans-serif", size: 12 }, color: '#64748b' },
+                        ticks: { beginAtZero: true, max: 5, stepSize: 1, backdropColor: 'transparent', color: '#94a3b8' }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+        
+        // Issue-wise Rating Grouped Bar Chart
+        const issueWiseCtx = document.getElementById('issueWiseRatingChart').getContext('2d');
+        new Chart(issueWiseCtx, {
+            type: 'bar',
+            data: {
+                labels: specificIssueLabels,
+                datasets: issueWiseDatasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: false,
+                        grid: { display: false }
+                    },
+                    y: {
+                        stacked: false,
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+                        title: { display: true, text: 'Number of Votes' }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { usePointStyle: true, padding: 15, font: { family: "'Inter', sans-serif" } }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            }
+        });
+
+        // Extra Analytics Data
+        const leaderSatisfactionData = {{ leader_satisfaction | tojson | safe }};
+        const leaderSatLabels = Object.keys(leaderSatisfactionData);
+        const leaderSatValues = Object.values(leaderSatisfactionData);
+
+        const topConstData = {{ top_constituencies | tojson | safe }};
+        const constLabels = Object.keys(topConstData);
+        const constValues = Object.values(topConstData);
+
+        // Supporter Satisfaction Horizontal Bar Chart
+        const suppSatCtx = document.getElementById('supporterSatisfactionChart').getContext('2d');
+        new Chart(suppSatCtx, {
+            type: 'bar',
+            data: {
+                labels: leaderSatLabels,
+                datasets: [{
+                    label: 'Satisfaction Index (%)',
+                    data: leaderSatValues,
+                    backgroundColor: 'rgba(217, 119, 6, 0.8)', // Amber
+                    borderColor: '#b45309',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: { max: 100, beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                    y: { grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Top Constituencies Bar Chart
+        const topConstCtx = document.getElementById('topConstituenciesChart').getContext('2d');
+        new Chart(topConstCtx, {
+            type: 'bar',
+            data: {
+                labels: constLabels,
+                datasets: [{
+                    label: 'Total Feedback',
+                    data: constValues,
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                    borderColor: '#059669',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' }, title: { display: true, text: 'Feedbacks' } },
+                    x: { grid: { display: false } }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

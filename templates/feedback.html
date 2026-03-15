@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="premium-card">
+                <div class="card-header bg-white border-bottom text-center py-4 px-5">
+                    <h3 class="mb-0 fw-bold text-gradient"><i class="fas fa-clipboard-check me-2 text-primary"></i>Voter Feedback Form</h3>
+                    <p class="mb-0 mt-2 text-secondary">Your voice matters. Share your thoughts securely and anonymously.</p>
+                </div>
+                <div class="card-body p-5">
+                    
+                    <!-- Progress Indicator -->
+                    <div class="step-indicator">
+                        <div class="step active" id="indicator-1">1</div>
+                        <div class="step" id="indicator-2">2</div>
+                        <div class="step" id="indicator-3">3</div>
+                        <div class="step" id="indicator-4">4</div>
+                    </div>
+
+                    <form id="feedbackForm" action="{{ url_for('submit_feedback') }}" method="POST">
+                        
+                        <!-- Step 1: Personal & Election Info -->
+                        <div class="form-step animate-slide-up active" id="step-1">
+                            <h4 class="mb-4 text-primary fw-bold pb-2 border-bottom">Step 1: Voter Details</h4>
+                            
+                            <div class="mb-3">
+                                <label for="name" class="form-label fw-bold">Full Name</label>
+                                <input type="text" class="form-control" id="name" name="name" required placeholder="Enter your full name">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="voter_id" class="form-label fw-bold">Voter ID Number</label>
+                                <input type="text" class="form-control" id="voter_id" name="voter_id" required pattern="^[A-Za-z]{3}[0-9]{7}$" title="Voter ID must start with 3 letters followed by exactly 7 numbers (e.g., ABC1234567)" placeholder="e.g., ABC1234567" style="text-transform: uppercase;">
+                                <div class="form-text text-danger" id="voter_id_error" style="display: none;">Must be 3 letters followed by 7 numbers.</div>
+                                <div class="form-text">We use this ONLY to prevent duplicate validation. Format: ABC1234567.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="election_type" class="form-label fw-bold">Election Type</label>
+                                <select class="form-select" id="election_type" name="election_type" required>
+                                    <option value="" selected disabled>Select Election Type...</option>
+                                    <option value="Parliamentary Election">Parliamentary Election (Lok Sabha)</option>
+                                    <option value="State Assembly Election">State Assembly Election (Vidhan Sabha)</option>
+                                </select>
+                            </div>
+
+                            <div class="d-flex justify-content-end mt-4">
+                                <button type="button" class="btn btn-primary px-4 btn-next">Next <i class="fas fa-arrow-right ms-2"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Location Info -->
+                        <div class="form-step animate-slide-up" id="step-2">
+                            <h4 class="mb-4 text-primary fw-bold pb-2 border-bottom">Step 2: Location Information</h4>
+                            
+                            <div class="mb-3">
+                                <label for="state" class="form-label fw-bold">Select State</label>
+                                <select class="form-select form-select-lg" id="state" name="state" required>
+                                    <option value="" selected disabled>Choose your state...</option>
+                                    <!-- States injected by main.js -->
+                                </select>
+                            </div>
+
+                            <div class="mb-3" id="constituency-group">
+                                <label for="constituency_select" class="form-label fw-bold">Select Constituency</label>
+                                <select class="form-select form-select-lg" id="constituency_select" name="constituency">
+                                    <option value="" selected disabled>Choose constituency...</option>
+                                    <!-- Constituencies injected by main.js based on state -->
+                                </select>
+                            </div>
+
+                            <div class="mb-3" id="constituency-other-group" style="display: none;">
+                                <label for="constituency_other" class="form-label fw-bold">Type Constituency Name</label>
+                                <input type="text" class="form-control form-control-lg" id="constituency_other" name="constituency_other" placeholder="e.g., Kanyakumari">
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-outline-secondary btn-lg px-4 btn-prev"><i class="fas fa-arrow-left me-2"></i> Previous</button>
+                                <button type="button" class="btn btn-primary btn-lg px-4 btn-next">Next <i class="fas fa-arrow-right ms-2"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Issue Ratings -->
+                        <div class="form-step animate-slide-up" id="step-3">
+                            <h4 class="mb-4 text-primary fw-bold pb-2 border-bottom">Step 3: Rate Local Issues</h4>
+                            <p class="text-muted small mb-4">Rate the following issues in your area on a scale of 1 (Poor) to 5 (Excellent).</p>
+
+                            <!-- Education -->
+                            <div class="rating-group">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Education Quality</h6>
+                                    <small class="text-muted">Schools, colleges, and educational infrastructure</small>
+                                </div>
+                                <div class="rating-faces">
+                                    <input type="radio" id="face1-edu" name="education_rating" value="1" required/>
+                                    <label for="face1-edu" class="face-1" title="Poor (1)"><i class="fas fa-angry"></i></label>
+                                    <input type="radio" id="face2-edu" name="education_rating" value="2" />
+                                    <label for="face2-edu" class="face-2" title="Below Average (2)"><i class="fas fa-frown"></i></label>
+                                    <input type="radio" id="face3-edu" name="education_rating" value="3" />
+                                    <label for="face3-edu" class="face-3" title="Average (3)"><i class="fas fa-meh"></i></label>
+                                    <input type="radio" id="face4-edu" name="education_rating" value="4" />
+                                    <label for="face4-edu" class="face-4" title="Good (4)"><i class="fas fa-smile"></i></label>
+                                    <input type="radio" id="face5-edu" name="education_rating" value="5" />
+                                    <label for="face5-edu" class="face-5" title="Excellent (5)"><i class="fas fa-laugh-beam"></i></label>
+                                </div>
+                            </div>
+
+                            <!-- Healthcare -->
+                            <div class="rating-group">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Healthcare Facilities</h6>
+                                    <small class="text-muted">Hospitals, clinics, and medical staff availability</small>
+                                </div>
+                                <div class="rating-faces">
+                                    <input type="radio" id="face1-health" name="healthcare_rating" value="1" required/>
+                                    <label for="face1-health" class="face-1" title="Poor (1)"><i class="fas fa-angry"></i></label>
+                                    <input type="radio" id="face2-health" name="healthcare_rating" value="2" />
+                                    <label for="face2-health" class="face-2" title="Below Average (2)"><i class="fas fa-frown"></i></label>
+                                    <input type="radio" id="face3-health" name="healthcare_rating" value="3" />
+                                    <label for="face3-health" class="face-3" title="Average (3)"><i class="fas fa-meh"></i></label>
+                                    <input type="radio" id="face4-health" name="healthcare_rating" value="4" />
+                                    <label for="face4-health" class="face-4" title="Good (4)"><i class="fas fa-smile"></i></label>
+                                    <input type="radio" id="face5-health" name="healthcare_rating" value="5" />
+                                    <label for="face5-health" class="face-5" title="Excellent (5)"><i class="fas fa-laugh-beam"></i></label>
+                                </div>
+                            </div>
+
+                            <!-- Employment -->
+                            <div class="rating-group">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Employment Opportunities</h6>
+                                    <small class="text-muted">Job creation, industries, and local businesses</small>
+                                </div>
+                                <div class="rating-faces">
+                                    <input type="radio" id="face1-emp" name="employment_rating" value="1" required/>
+                                    <label for="face1-emp" class="face-1" title="Poor (1)"><i class="fas fa-angry"></i></label>
+                                    <input type="radio" id="face2-emp" name="employment_rating" value="2" />
+                                    <label for="face2-emp" class="face-2" title="Below Average (2)"><i class="fas fa-frown"></i></label>
+                                    <input type="radio" id="face3-emp" name="employment_rating" value="3" />
+                                    <label for="face3-emp" class="face-3" title="Average (3)"><i class="fas fa-meh"></i></label>
+                                    <input type="radio" id="face4-emp" name="employment_rating" value="4" />
+                                    <label for="face4-emp" class="face-4" title="Good (4)"><i class="fas fa-smile"></i></label>
+                                    <input type="radio" id="face5-emp" name="employment_rating" value="5" />
+                                    <label for="face5-emp" class="face-5" title="Excellent (5)"><i class="fas fa-laugh-beam"></i></label>
+                                </div>
+                            </div>
+
+                            <!-- Crime -->
+                            <div class="rating-group">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Crime & Safety</h6>
+                                    <small class="text-muted">Law enforcement, night safety, and crime rates</small>
+                                </div>
+                                <div class="rating-faces">
+                                    <input type="radio" id="face1-crime" name="crime_rating" value="1" required/>
+                                    <label for="face1-crime" class="face-1" title="Poor (1)"><i class="fas fa-angry"></i></label>
+                                    <input type="radio" id="face2-crime" name="crime_rating" value="2" />
+                                    <label for="face2-crime" class="face-2" title="Below Average (2)"><i class="fas fa-frown"></i></label>
+                                    <input type="radio" id="face3-crime" name="crime_rating" value="3" />
+                                    <label for="face3-crime" class="face-3" title="Average (3)"><i class="fas fa-meh"></i></label>
+                                    <input type="radio" id="face4-crime" name="crime_rating" value="4" />
+                                    <label for="face4-crime" class="face-4" title="Good (4)"><i class="fas fa-smile"></i></label>
+                                    <input type="radio" id="face5-crime" name="crime_rating" value="5" />
+                                    <label for="face5-crime" class="face-5" title="Excellent (5)"><i class="fas fa-laugh-beam"></i></label>
+                                </div>
+                            </div>
+
+                            <!-- Development -->
+                            <div class="rating-group">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Local Development</h6>
+                                    <small class="text-muted">Community centers, parks, and overall progress</small>
+                                </div>
+                                <div class="rating-faces">
+                                    <input type="radio" id="face1-dev" name="development_rating" value="1" required/>
+                                    <label for="face1-dev" class="face-1" title="Poor (1)"><i class="fas fa-angry"></i></label>
+                                    <input type="radio" id="face2-dev" name="development_rating" value="2" />
+                                    <label for="face2-dev" class="face-2" title="Below Average (2)"><i class="fas fa-frown"></i></label>
+                                    <input type="radio" id="face3-dev" name="development_rating" value="3" />
+                                    <label for="face3-dev" class="face-3" title="Average (3)"><i class="fas fa-meh"></i></label>
+                                    <input type="radio" id="face4-dev" name="development_rating" value="4" />
+                                    <label for="face4-dev" class="face-4" title="Good (4)"><i class="fas fa-smile"></i></label>
+                                    <input type="radio" id="face5-dev" name="development_rating" value="5" />
+                                    <label for="face5-dev" class="face-5" title="Excellent (5)"><i class="fas fa-laugh-beam"></i></label>
+                                </div>
+                            </div>
+
+                            <!-- Infrastructure -->
+                            <div class="rating-group">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Road & Infrastructure</h6>
+                                    <small class="text-muted">Condition of roads, bridges, and public transport</small>
+                                </div>
+                                <div class="rating-faces">
+                                    <input type="radio" id="face1-inf" name="infrastructure_rating" value="1" required/>
+                                    <label for="face1-inf" class="face-1" title="Poor (1)"><i class="fas fa-angry"></i></label>
+                                    <input type="radio" id="face2-inf" name="infrastructure_rating" value="2" />
+                                    <label for="face2-inf" class="face-2" title="Below Average (2)"><i class="fas fa-frown"></i></label>
+                                    <input type="radio" id="face3-inf" name="infrastructure_rating" value="3" />
+                                    <label for="face3-inf" class="face-3" title="Average (3)"><i class="fas fa-meh"></i></label>
+                                    <input type="radio" id="face4-inf" name="infrastructure_rating" value="4" />
+                                    <label for="face4-inf" class="face-4" title="Good (4)"><i class="fas fa-smile"></i></label>
+                                    <input type="radio" id="face5-inf" name="infrastructure_rating" value="5" />
+                                    <label for="face5-inf" class="face-5" title="Excellent (5)"><i class="fas fa-laugh-beam"></i></label>
+                                </div>
+                            </div>
+
+                            <!-- Water -->
+                            <div class="rating-group">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Water Supply</h6>
+                                    <small class="text-muted">Clean drinking water availability and sanitation</small>
+                                </div>
+                                <div class="rating-faces">
+                                    <input type="radio" id="face1-wat" name="water_rating" value="1" required/>
+                                    <label for="face1-wat" class="face-1" title="Poor (1)"><i class="fas fa-angry"></i></label>
+                                    <input type="radio" id="face2-wat" name="water_rating" value="2" />
+                                    <label for="face2-wat" class="face-2" title="Below Average (2)"><i class="fas fa-frown"></i></label>
+                                    <input type="radio" id="face3-wat" name="water_rating" value="3" />
+                                    <label for="face3-wat" class="face-3" title="Average (3)"><i class="fas fa-meh"></i></label>
+                                    <input type="radio" id="face4-wat" name="water_rating" value="4" />
+                                    <label for="face4-wat" class="face-4" title="Good (4)"><i class="fas fa-smile"></i></label>
+                                    <input type="radio" id="face5-wat" name="water_rating" value="5" />
+                                    <label for="face5-wat" class="face-5" title="Excellent (5)"><i class="fas fa-laugh-beam"></i></label>
+                                </div>
+                            </div>
+
+                            <!-- New: Electricity -->
+                            <div class="rating-group">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Electricity & Power</h6>
+                                    <small class="text-muted">Consistent power supply and street lighting</small>
+                                </div>
+                                <div class="rating-faces">
+                                    <input type="radio" id="face1-elec" name="electricity_rating" value="1" required/>
+                                    <label for="face1-elec" class="face-1" title="Poor (1)"><i class="fas fa-angry"></i></label>
+                                    <input type="radio" id="face2-elec" name="electricity_rating" value="2" />
+                                    <label for="face2-elec" class="face-2" title="Below Average (2)"><i class="fas fa-frown"></i></label>
+                                    <input type="radio" id="face3-elec" name="electricity_rating" value="3" />
+                                    <label for="face3-elec" class="face-3" title="Average (3)"><i class="fas fa-meh"></i></label>
+                                    <input type="radio" id="face4-elec" name="electricity_rating" value="4" />
+                                    <label for="face4-elec" class="face-4" title="Good (4)"><i class="fas fa-smile"></i></label>
+                                    <input type="radio" id="face5-elec" name="electricity_rating" value="5" />
+                                    <label for="face5-elec" class="face-5" title="Excellent (5)"><i class="fas fa-laugh-beam"></i></label>
+                                </div>
+                            </div>
+
+                            <!-- New: Public Transport -->
+                            <div class="rating-group">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Public Transport</h6>
+                                    <small class="text-muted">Bus services, trains, and regional connectivity</small>
+                                </div>
+                                <div class="rating-faces">
+                                    <input type="radio" id="face1-trans" name="transport_rating" value="1" required/>
+                                    <label for="face1-trans" class="face-1" title="Poor (1)"><i class="fas fa-angry"></i></label>
+                                    <input type="radio" id="face2-trans" name="transport_rating" value="2" />
+                                    <label for="face2-trans" class="face-2" title="Below Average (2)"><i class="fas fa-frown"></i></label>
+                                    <input type="radio" id="face3-trans" name="transport_rating" value="3" />
+                                    <label for="face3-trans" class="face-3" title="Average (3)"><i class="fas fa-meh"></i></label>
+                                    <input type="radio" id="face4-trans" name="transport_rating" value="4" />
+                                    <label for="face4-trans" class="face-4" title="Good (4)"><i class="fas fa-smile"></i></label>
+                                    <input type="radio" id="face5-trans" name="transport_rating" value="5" />
+                                    <label for="face5-trans" class="face-5" title="Excellent (5)"><i class="fas fa-laugh-beam"></i></label>
+                                </div>
+                            </div>
+
+                            <!-- New: Women Safety -->
+                            <div class="rating-group">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Women's Safety</h6>
+                                    <small class="text-muted">Dedicated security measures and safe spaces</small>
+                                </div>
+                                <div class="rating-faces">
+                                    <input type="radio" id="face1-wom" name="womensafety_rating" value="1" required/>
+                                    <label for="face1-wom" class="face-1" title="Poor (1)"><i class="fas fa-angry"></i></label>
+                                    <input type="radio" id="face2-wom" name="womensafety_rating" value="2" />
+                                    <label for="face2-wom" class="face-2" title="Below Average (2)"><i class="fas fa-frown"></i></label>
+                                    <input type="radio" id="face3-wom" name="womensafety_rating" value="3" />
+                                    <label for="face3-wom" class="face-3" title="Average (3)"><i class="fas fa-meh"></i></label>
+                                    <input type="radio" id="face4-wom" name="womensafety_rating" value="4" />
+                                    <label for="face4-wom" class="face-4" title="Good (4)"><i class="fas fa-smile"></i></label>
+                                    <input type="radio" id="face5-wom" name="womensafety_rating" value="5" />
+                                    <label for="face5-wom" class="face-5" title="Excellent (5)"><i class="fas fa-laugh-beam"></i></label>
+                                </div>
+                            </div>
+
+                            <!-- New: Agriculture -->
+                            <div class="rating-group">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Agriculture & Farming</h6>
+                                    <small class="text-muted">Support for local farmers, subsidies, and irrigation</small>
+                                </div>
+                                <div class="rating-faces">
+                                    <input type="radio" id="face1-agr" name="agriculture_rating" value="1" required/>
+                                    <label for="face1-agr" class="face-1" title="Poor (1)"><i class="fas fa-angry"></i></label>
+                                    <input type="radio" id="face2-agr" name="agriculture_rating" value="2" />
+                                    <label for="face2-agr" class="face-2" title="Below Average (2)"><i class="fas fa-frown"></i></label>
+                                    <input type="radio" id="face3-agr" name="agriculture_rating" value="3" />
+                                    <label for="face3-agr" class="face-3" title="Average (3)"><i class="fas fa-meh"></i></label>
+                                    <input type="radio" id="face4-agr" name="agriculture_rating" value="4" />
+                                    <label for="face4-agr" class="face-4" title="Good (4)"><i class="fas fa-smile"></i></label>
+                                    <input type="radio" id="face5-agr" name="agriculture_rating" value="5" />
+                                    <label for="face5-agr" class="face-5" title="Excellent (5)"><i class="fas fa-laugh-beam"></i></label>
+                                </div>
+                            </div>
+
+                            <!-- New: Housing -->
+                            <div class="rating-group border-0">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">Housing & Land</h6>
+                                    <small class="text-muted">Affordable housing schemes and land administration</small>
+                                </div>
+                                <div class="rating-faces">
+                                    <input type="radio" id="face1-house" name="housing_rating" value="1" required/>
+                                    <label for="face1-house" class="face-1" title="Poor (1)"><i class="fas fa-angry"></i></label>
+                                    <input type="radio" id="face2-house" name="housing_rating" value="2" />
+                                    <label for="face2-house" class="face-2" title="Below Average (2)"><i class="fas fa-frown"></i></label>
+                                    <input type="radio" id="face3-house" name="housing_rating" value="3" />
+                                    <label for="face3-house" class="face-3" title="Average (3)"><i class="fas fa-meh"></i></label>
+                                    <input type="radio" id="face4-house" name="housing_rating" value="4" />
+                                    <label for="face4-house" class="face-4" title="Good (4)"><i class="fas fa-smile"></i></label>
+                                    <input type="radio" id="face5-house" name="housing_rating" value="5" />
+                                    <label for="face5-house" class="face-5" title="Excellent (5)"><i class="fas fa-laugh-beam"></i></label>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4 border-top pt-4">
+                                <button type="button" class="btn btn-outline-secondary px-4 btn-prev"><i class="fas fa-arrow-left me-2"></i> Previous</button>
+                                <button type="button" class="btn btn-primary px-4 btn-next">Next <i class="fas fa-arrow-right ms-2"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Preferred Leader -->
+                        <div class="form-step animate-slide-up" id="step-4">
+                            <h4 class="mb-4 text-primary fw-bold pb-2 border-bottom">Step 4: Preferred Leader</h4>
+                            <p class="text-muted mb-4">Select the leader you prefer as the next Chief Minister based on your evaluation.</p>
+                            
+                            <!-- Hidden input to store leader choice -->
+                            <input type="hidden" id="preferred_leader" name="preferred_leader" required>
+
+                            <div class="row g-3 mb-4">
+                                <!-- DMK -->
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="card h-100 leader-card text-center py-3" data-leader="DMK - M.K. Stalin">
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <img src="{{ url_for('static', filename='images/leaders/dmk_leader.jpg') }}" alt="M.K. Stalin" class="rounded-circle shadow-sm" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #e63946;">
+                                            </div>
+                                            <h5 class="card-title fw-bold">M.K. Stalin</h5>
+                                            <p class="card-text text-muted">DMK</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- ADMK -->
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="card h-100 leader-card text-center py-3" data-leader="ADMK - Edappadi K. Palaniswami">
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <img src="{{ url_for('static', filename='images/leaders/aiadmk_leader.jpg') }}" alt="Edappadi K. Palaniswami" class="rounded-circle shadow-sm" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #2a9d8f;">
+                                            </div>
+                                            <h5 class="card-title fw-bold">Edappadi K. Palaniswami</h5>
+                                            <p class="card-text text-muted">ADMK</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- BJP/NDA -->
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="card h-100 leader-card text-center py-3" data-leader="NTK - Seeman">
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <img src="{{ url_for('static', filename='images/leaders/ntk_leader.png') }}" alt="Seeman" class="rounded-circle shadow-sm" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #e9c46a;">
+                                            </div>
+                                            <h5 class="card-title fw-bold">Seeman</h5>
+                                            <p class="card-text text-muted">NTK</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- INC/INDIA -->
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="card h-100 leader-card text-center py-3" data-leader="TVK - Vijay">
+                                        <div class="card-body">
+                                            <div class="mb-3">
+                                                <img src="{{ url_for('static', filename='images/leaders/tvk_leader.jpg') }}" alt="Vijay" class="rounded-circle shadow-sm" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #f4a261;">
+                                            </div>
+                                            <h5 class="card-title fw-bold">Vijay</h5>
+                                            <p class="card-text text-muted">TVK</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-outline-secondary px-4 btn-prev"><i class="fas fa-arrow-left me-2"></i> Previous</button>
+                                <button type="submit" class="btn btn-success px-5 fw-bold" id="btn-submit" disabled><i class="fas fa-check-circle me-2"></i> Submit Feedback</button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
